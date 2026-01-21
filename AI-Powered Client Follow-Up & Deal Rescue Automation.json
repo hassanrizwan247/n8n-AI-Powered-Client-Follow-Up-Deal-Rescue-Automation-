@@ -1,0 +1,658 @@
+{
+  "name": "AI-Powered Client Follow-Up & Deal Rescue Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "17olrHFauXAvmaH5vqLIcv9reCw-QfNPFg-AUb40OyLw",
+          "mode": "list",
+          "cachedResultName": "Deals_CRM_Sample",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17olrHFauXAvmaH5vqLIcv9reCw-QfNPFg-AUb40OyLw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1104116058,
+          "mode": "list",
+          "cachedResultName": "Deals",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17olrHFauXAvmaH5vqLIcv9reCw-QfNPFg-AUb40OyLw/edit#gid=1104116058"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -128,
+        -176
+      ],
+      "id": "80e38f86-e89f-46aa-95a3-344522303652",
+      "name": "Get row(s) in sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7rHfcKJO21eyEjJW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 14
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        -176
+      ],
+      "id": "a4eeb3a1-b3f4-4cf0-b8d9-f786c03797d9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4084e151-64d3-4612-a75e-81bbccedb687",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "Lost",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        -176
+      ],
+      "id": "101384dd-284c-4023-a7d9-0d75182fa0f0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "htfsh12345@gmail.com",
+        "subject": "You lost a lead!",
+        "message": "=The lead was sent by  {{ $json.name }} having email {{ $json.email }} which was worth {{ $json.deal_value }}!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -80
+      ],
+      "id": "8def079f-25a8-422c-8644-cc20101ee95e",
+      "name": "Send a message",
+      "webhookId": "b78882c6-d9f2-4fd9-bca8-6dec3c5829e4",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zcFJM9x1VZTl6Jw6",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "438aa4f5-2253-4bca-91f3-23dd5671993c",
+              "name": "days_inactive",
+              "value": "={{ Math.floor((new Date() - new Date($json.last_contact_date)) / (1000 * 60 * 60 * 24)) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -272
+      ],
+      "id": "518278db-9d79-458f-afbd-16d3ecd379fa",
+      "name": "Calculate Days Inactive"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ab104b21-2d40-4f82-9f74-0a2aa5ed9981",
+              "leftValue": "={{ $json.days_inactive }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        -272
+      ],
+      "id": "cdcf3a24-8a76-49b4-bcbf-e81351e2d5da",
+      "name": "Stalled Deal Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "51acf5f8-f83a-408b-96c1-a168dcb6ffd3",
+              "name": "client_name",
+              "value": "={{ $('If').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "39d55677-9c44-40c1-86f6-67aebaa46fc8",
+              "name": "company",
+              "value": "={{ $('If').item.json.company }}",
+              "type": "string"
+            },
+            {
+              "id": "c0374eab-dc9c-43ad-b8df-85f4bb43b942",
+              "name": "deal_value",
+              "value": "={{ $('If').item.json.deal_value }}",
+              "type": "number"
+            },
+            {
+              "id": "65dec3a9-5478-4526-8d5c-b194f6cfeb6d",
+              "name": "priority",
+              "value": "={{ $('If').item.json.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "e7e5c67e-01f2-4b82-a936-43a6fd8afbc0",
+              "name": "days_inactive",
+              "value": "={{ $('Calculate Days Inactive').item.json.days_inactive }}",
+              "type": "number"
+            },
+            {
+              "id": "0a31dd8d-1125-4041-9246-6cfb7ac04a4d",
+              "name": "notes",
+              "value": "={{ $('Get row(s) in sheet').item.json.notes }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        -368
+      ],
+      "id": "9ebc4a48-cfe3-4cd1-ae20-efa3b492e320",
+      "name": "AI Context Builder"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Spam! Report at email  {{ $('If').item.json.email }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -176
+      ],
+      "id": "a0a00643-4ac1-4081-95c5-e3bd3d37176b",
+      "name": "Spam"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a professional sales assistant.\n\nWrite a polite, short, human-sounding follow-up email.\n\nContext:\nClient name: {{ $json.client_name }}\nCompany: {{ $json.company }}\nDeal value: {{ $json.deal_value }}\nPriority: {{ $json.priority }}\nDays inactive: {{ $json.days_inactive }}\nNotes: {{ $json.notes }}\n\nRules:\n- Friendly and respectful\n- No pressure\n- Under 120 words\n- End with a soft CTA\n- Do NOT mention AI\n\nReturn ONLY the email body text.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        -368
+      ],
+      "id": "f6e04cdf-96e2-4659-96d7-b0ad8e23340d",
+      "name": "AI Follow-Up Generator",
+      "executeOnce": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "dG1GoPZwCBTAXHVA",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "02f713af-b560-4088-b284-4492584755d5",
+              "leftValue": "={{ $('Get row(s) in sheet').item.json.deal_value }}",
+              "rightValue": 1000,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -368
+      ],
+      "id": "4c81c63f-c3b0-492e-8e80-8d801d274f3d",
+      "name": "High-Value Escalation Check"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Get row(s) in sheet').item.json.email }}",
+        "subject": "Following up — quick check-in",
+        "message": "={{ $json.output[0].content[0].text }}\n\nSent with priority follow-up",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -464
+      ],
+      "id": "f22e7736-c9b6-4024-b278-1d86b9360010",
+      "name": "Escalated Email",
+      "webhookId": "16392648-ae6d-464d-bc44-324de08fce6a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zcFJM9x1VZTl6Jw6",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Get row(s) in sheet').item.json.email }}",
+        "subject": "Quick follow-up",
+        "message": "={{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -272
+      ],
+      "id": "9b8c70ed-fac5-429c-8d39-310d146d1f2f",
+      "name": "Normal Email",
+      "webhookId": "16392648-ae6d-464d-bc44-324de08fce6a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zcFJM9x1VZTl6Jw6",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "17olrHFauXAvmaH5vqLIcv9reCw-QfNPFg-AUb40OyLw",
+          "mode": "list",
+          "cachedResultName": "Deals_CRM_Sample",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17olrHFauXAvmaH5vqLIcv9reCw-QfNPFg-AUb40OyLw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1104116058,
+          "mode": "list",
+          "cachedResultName": "Deals",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17olrHFauXAvmaH5vqLIcv9reCw-QfNPFg-AUb40OyLw/edit#gid=1104116058"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $('Get row(s) in sheet').item.json.email }}",
+            "deal_id": "={{ $('Get row(s) in sheet').item.json.deal_id }}",
+            "name": "={{ $('Get row(s) in sheet').item.json.name }}",
+            "company": "={{ $('Get row(s) in sheet').item.json.company }}",
+            "deal_value": "={{ $('Get row(s) in sheet').item.json.deal_value }}",
+            "followup_sent": "Yes",
+            "priority": "={{ $('Get row(s) in sheet').item.json.priority }}",
+            "notes": "={{ $('Get row(s) in sheet').item.json.notes }}",
+            "status": "={{ $('Get row(s) in sheet').item.json.status }}",
+            "last_contact_date": "={{ $('Schedule Trigger').item.json['Readable date'] }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "deal_value",
+              "displayName": "deal_value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_contact_date",
+              "displayName": "last_contact_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "followup_sent",
+              "displayName": "followup_sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        -368
+      ],
+      "id": "57102e8d-487e-45ec-8aad-598d0ee4915c",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7rHfcKJO21eyEjJW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "This is red because all the free credits are used!\nThere is no error in this workflow!",
+        "height": 352,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        944,
+        -512
+      ],
+      "typeVersion": 1,
+      "id": "231336a7-204e-4d5e-b9eb-9694c86ad941",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Calculate Days Inactive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Days Inactive": {
+      "main": [
+        [
+          {
+            "node": "Stalled Deal Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stalled Deal Check": {
+      "main": [
+        [
+          {
+            "node": "AI Context Builder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Context Builder": {
+      "main": [
+        [
+          {
+            "node": "AI Follow-Up Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Follow-Up Generator": {
+      "main": [
+        [
+          {
+            "node": "High-Value Escalation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High-Value Escalation Check": {
+      "main": [
+        [
+          {
+            "node": "Escalated Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normal Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalated Email": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normal Email": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "32267425-b388-454c-afee-b8ba92cab2fb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9d4e41ac00f47d48db81622a42173403a2c3150258a9fa8d8d121acaeccc607f"
+  },
+  "id": "ZLQzpVUdZaIfUo5m-Cjqc",
+  "tags": []
+}
