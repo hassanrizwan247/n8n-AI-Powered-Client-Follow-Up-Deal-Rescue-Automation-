@@ -1,6 +1,6 @@
 # AI-Powered Client Follow-Up & Deal Rescue Automation
 
-This project  **single, business-grade n8n workflow** designed to help founders, agencies, and freelancers **recover stalled deals automatically**.
+This project is a **single, business-grade n8n workflow** designed to help founders, agencies, and freelancers **recover stalled deals automatically**.
 
 It detects inactive deals from a CRM, generates **AI-written personalized follow-up emails**, escalates high-value opportunities, and updates deal status — all without manual intervention.
 
